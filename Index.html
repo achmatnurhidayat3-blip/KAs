@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asheeqa Printing - Dashboard</title>
+    <style>
+        :root { --primary: #2980b9; --secondary: #2c3e50; --success: #27ae60; --danger: #c0392b; --warning: #f1c40f; }
+        body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 10px; font-size: 13px; }
+        .container { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .grid-dash { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 15px; }
+        .stat-card { background: var(--secondary); color: white; padding: 10px; border-radius: 8px; text-align: center; font-size: 10px; }
+        input, select, button { width: 100%; padding: 12px; margin: 4px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; }
+        button { cursor: pointer; font-weight: bold; color: white; border: none; }
+        .item-row { display: flex; gap: 5px; margin-bottom: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: white; font-size: 11px; }
+        th, td { border: 1px solid #eee; padding: 8px; text-align: left; }
+        
+        /* DESAIN AREA CETAK NOTA */
+        #area-cetak-nota { display: none; }
+        @media print {
+            .no-print { display: none !important; }
+            #area-cetak-nota { display: block !important; width: 100%; font-family: 'Segoe UI', sans-serif; background: white; }
+            body { background: white; }
+            .nota-wrapper { border: none !important; } /* Hilangkan border kotak saat print jika ingin lebih bersih */
+        }
+        .nota-wrapper { border: 1.5px solid #333; padding: 20px; border-radius: 8px; max-width: 700px; margin: auto; background: white; }
+        .header-table { width: 100%; border-bottom: 3px double #333; padding-bottom: 15px; margin-bottom: 15px; }
+        .logo-img { width: 65px; height: 65px; object-fit: contain; }
+        .logo-box { width: 60px; height: 60px; background: #2c3e50; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 24px; }
+        .p-judul { color: #2980b9; border: 2px solid #2980b9; padding: 4px 12px; border-radius: 4px; font-weight: bold; text-transform: uppercase; font-size: 14px; }
+        .table-pesanan { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .table-pesanan th { background: #f8f9fa; border: 1px solid #ccc; padding: 10px; font-weight: bold; }
+        .table-pesanan td { border: 1px solid #ccc; padding: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="area-cetak-nota">
+    <div class="nota-wrapper">
+        <table class="header-table">
+            <tr>
+                <td style="width: 75px;">
+                   <img src="https://lh3.googleusercontent.com/u/0/d/1F055wulsiC-LDjW_NMZ4yXsMSCDj53TW" class="logo-img" onerror="this.style.display='none'; document.getElementById('alt-logo').style.display='flex';">
+                    <div id="alt-logo" class="logo-box" style="display:none;">A</div>
+                </td>
+                <td>
+                    <h2 style="margin:0; color: #2c3e50; font-size: 24px; letter-spacing: 1px;">ASHEEQA PRINTING</h2>
+                    <p style="font-size:11px; margin:3px 0; font-weight: bold; color: #2980b9;">Percetakan & Desain Undangan</p>
+                    <p style="font-size:10px; margin:0; color: #555;">Jl. Borong Raya 2 | WhatsApp: 089699910769</p>
+                </td>
+                <td style="text-align: right; vertical-align: middle;">
+                    <span id="p_judul" class="p-judul">NOTA</span>
+                </td>
+            </tr>
+        </table>
+
+        <div style="display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 15px; padding: 0 5px;">
+            <div><b>Kepada Yth:</b><br><span id="p_cs" style="font-size: 14px; font-weight: bold; text-transform: uppercase;"></span></div>
+            <div style="text-align: right;"><b>Tanggal:</b><br><span id="p_tgl"></span></div>
+        </div>
+
+        <table class="table-pesanan">
+            <thead>
+                <tr>
+                    <th>Deskripsi Pesanan</th>
+                    <th style="width: 60px; text-align: center;">Qty</th>
+                    <th style="width: 120px; text-align: right;">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody id="p_items"></tbody>
+        </table>
+
+        <div style="display: flex; justify-content: flex-end; margin-top: 15px;">
+            <table style="width: 260px; font-size: 13px; line-height: 1.8;">
+                <tr>
+                    <td>Total Keseluruhan</td>
+                    <td style="text-align: right;">Rp <span id="p_total"></span></td>
+                </tr>
+                <tr id="row_dp_lama">
+                    <td>Uang Muka / Sebelumnya</td>
+                    <td style="text-align: right;">- Rp <span id="p_dp_lama"></span></td>
+                </tr>
+                <tr>
+                    <td style="border-top: 1px solid #333;"><b>Bayar Sekarang</b></td>
+                    <td style="text-align: right; border-top: 1px solid #333;"><b>Rp <span id="p_dp"></span></b></td>
+                </tr>
+                <tr style="font-size: 15px; color: #27ae60;">
+                    <td><b>Sisa Pelunasan</b></td>
+                    <td style="text-align: right;"><b>Rp <span id="p_sisa"></span></b></td>
+                </tr>
+            </table>
+        </div>
+
+        <div style="margin-top: 30px; border-top: 1px dashed #bbb; padding-top: 10px; font-size: 10px; text-align: center; color: #666; font-style: italic;">
+            "Terima kasih telah mempercayakan cetakan Anda kepada kami."
+        </div>
+    </div>
+</div>
+
+<div class="no-print">
+    <div class="grid-dash">
+        <div class="stat-card">Cash<br><b id="d_cash">0</b></div>
+        <div class="stat-card">BNI<br><b id="d_bni">0</b></div>
+        <div class="stat-card">BRI<br><b id="d_bri">0</b></div>
+        <div class="stat-card" style="background:var(--success)">Masuk (Bln Ini)<br><b id="d_masuk">0</b></div>
+        <div class="stat-card" style="background:var(--danger)">Keluar (Bln Ini)<br><b id="d_keluar">0</b></div>
+        <div class="stat-card" style="background:#8e44ad">Laba Bersih<br><b id="d_laba">0</b></div>
+        <div class="stat-card" style="background:#d35400; grid-column: span 3;">Total Piutang (Sisa di Pelanggan)<br><b id="d_piutang" style="font-size:14px;">0</b></div>
+    </div>
+
+    <div class="container">
+        <h3>Input Nota Baru</h3>
+        <input type="text" id="cs" placeholder="Nama Pelanggan">
+        <div id="items-container">
+            <div class="item-row">
+                <input type="text" class="nn" placeholder="Barang" style="flex:2">
+                <input type="number" class="nq" placeholder="Qty" style="flex:1" oninput="updateOtomatis()">
+                <input type="number" class="nh" placeholder="Harga" style="flex:1" oninput="updateOtomatis()">
+            </div>
+        </div>
+        <button onclick="tambahBaris()" style="background:#eee; color:#333;">+ Tambah Barang</button>
+        <p>Total: <b id="txt_total">0</b> | Sisa: <b id="txt_sisa">0</b></p>
+        <input type="number" id="input_dp" placeholder="Nominal Bayar/DP" oninput="hitungSisa()">
+        <select id="metode"><option value="Cash">Cash</option><option value="BNI">BNI</option><option value="BRI">BRI</option></select>
+        <div style="display:flex; gap:5px;">
+            <button style="background:var(--primary)" onclick="simpanData(false)">SIMPAN</button>
+            <button style="background:var(--success)" onclick="simpanData(true)">CETAK NOTA</button>
+        </div>
+        <button style="background:#25D366" onclick="kirimEstimasiWA()">KIRIM ESTIMASI WA</button>
+    </div>
+
+    <div class="container" style="border-top:4px solid var(--danger)">
+        <h4>Pengeluaran & Peralihan Dana</h4>
+        <input type="text" id="ex_n" placeholder="Keperluan/Nama Barang">
+        <input type="number" id="ex_h" placeholder="Biaya (Rp)">
+        <select id="ex_m"><option value="Cash">Cash</option><option value="BNI">BNI</option><option value="BRI">BRI</option></select>
+        <button style="background:var(--danger)" onclick="simpanExp()">SIMPAN PENGELUARAN</button>
+        <hr>
+        <div id="panel_alih">
+            <p>Transfer Saldo Antar Akun:</p>
+            <div style="display:flex; gap:5px;">
+                <select id="tf_d"><option value="Cash">Dari Cash</option><option value="BNI">Dari BNI</option><option value="BRI">Dari BRI</option></select>
+                <select id="tf_k"><option value="BNI">Ke BNI</option><option value="BRI">Ke BRI</option><option value="Cash">Ke Cash</option></select>
+            </div>
+            <input type="number" id="tf_j" placeholder="Jumlah Transfer">
+            <button style="background:var(--warning); color:black;" onclick="prosesAlih()">PROSES PERALIHAN</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <h3>Riwayat Pemesanan</h3>
+        <table id="tabel_nota"><thead><tr><th>Nama</th><th>Total</th><th>Sisa</th><th>Aksi</th></tr></thead><tbody></tbody></table>
+        <h3 style="margin-top:15px;">Riwayat Pengeluaran</h3>
+        <table id="tabel_exp"><thead><tr><th>Tgl</th><th>Keterangan</th><th>Total</th></tr></thead><tbody></tbody></table>
+    </div>
+</div>
+
+<script>
+    const webAppUrl = 'https://script.google.com/macros/s/AKfycbzu1c515Cfc5qXJIneGJjZ9DPcp323BDFljIrxTLDWofxBcraroQ7z0V3mB1RPf3qD0/exec';
+    let dataNotaGlobal = [];
+
+    function tambahBaris() {
+        let d = document.createElement('div'); d.className='item-row';
+        d.innerHTML = `<input type="text" class="nn" placeholder="Barang" style="flex:2"><input type="number" class="nq" placeholder="Qty" style="flex:1" oninput="updateOtomatis()"><input type="number" class="nh" placeholder="Harga" style="flex:1" oninput="updateOtomatis()">`;
+        document.getElementById('items-container').appendChild(d);
+    }
+
+    function updateOtomatis() {
+        let t = 0; document.querySelectorAll('.item-row').forEach(r => t += (r.querySelector('.nq').value * r.querySelector('.nh').value || 0));
+        document.getElementById('txt_total').innerText = t.toLocaleString();
+        document.getElementById('input_dp').value = t * 0.5;
+        hitungSisa();
+    }
+
+    function hitungSisa() {
+        let t = 0; document.querySelectorAll('.item-row').forEach(r => t += (r.querySelector('.nq').value * r.querySelector('.nh').value || 0));
+        let dp = document.getElementById('input_dp').value || 0;
+        document.getElementById('txt_sisa').innerText = (t - dp).toLocaleString();
+    }
+
+    async function simpanData(p) {
+        let cs = document.getElementById('cs').value; if(!cs) return alert("Isi Nama Pelanggan!");
+        let items = []; let total = 0;
+        document.querySelectorAll('.item-row').forEach(r => {
+            let n = r.querySelector('.nn').value, q = r.querySelector('.nq').value, h = r.querySelector('.nh').value;
+            if(n) { items.push({n,q,h,sub:q*h}); total += (q*h); }
+        });
+        let dp = document.getElementById('input_dp').value || 0;
+        
+        if(p) {
+            cetak(cs, items, total, dp, 0, "NOTA PEMESANAN");
+            // Jeda agar browser merender gambar & teks ke nota sebelum jendela print terbuka
+            setTimeout(async () => {
+                window.print();
+                await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ tipe: "Nota", nama: cs, total, dp, metode: document.getElementById('metode').value, items }) });
+                setTimeout(() => { location.reload(); }, 1200); 
+            }, 1000);
+        } else {
+            await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ tipe: "Nota", nama: cs, total, dp, metode: document.getElementById('metode').value, items }) });
+            location.reload();
+        }
+    }
+
+    function cetak(cs, items, total, dpSekarang, dpLama, judul) {
+        document.getElementById('p_judul').innerText = judul;
+        document.getElementById('p_cs').innerText = cs;
+        document.getElementById('p_tgl').innerText = new Date().toLocaleDateString('id-ID', {day:'numeric', month:'long', year:'numeric'});
+        document.getElementById('p_items').innerHTML = items.map(i => `<tr><td>${i.n}</td><td align="center">${i.q}</td><td align="right">${Number(i.sub).toLocaleString()}</td></tr>`).join("");
+        document.getElementById('p_total').innerText = Number(total).toLocaleString();
+        document.getElementById('p_dp_lama').innerText = Number(dpLama).toLocaleString();
+        document.getElementById('p_dp').innerText = Number(dpSekarang).toLocaleString();
+        document.getElementById('row_dp_lama').style.display = dpLama > 0 ? "table-row" : "none";
+        let sisa = total - dpLama - dpSekarang;
+        document.getElementById('p_sisa').innerText = sisa <= 0 ? "0 (LUNAS)" : sisa.toLocaleString();
+    }
+
+    async function prosesPelunasan(id) {
+        let n = dataNotaGlobal.find(x => x[0] == id);
+        if(!n) return;
+        let itms = []; try { itms = JSON.parse(n[2]); } catch(e) { itms = [{n: n[2], q: 1, sub: n[3]}]; }
+        let total = Number(n[3]), dpAwal = Number(n[4]), sisaBayar = Number(n[5]);
+        
+        cetak(n[1], itms, total, sisaBayar, dpAwal, "NOTA PELUNASAN");
+        
+        setTimeout(async () => {
+            window.print();
+            await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ tipe: "Pelunasan", id: id }) });
+            setTimeout(() => { location.reload(); }, 1200);
+        }, 1000);
+    }
+
+    async function loadData() {
+        try {
+            let res = await fetch(webAppUrl + "?action=getDashboard");
+            let d = await res.json();
+            document.getElementById('d_cash').innerText = d.cash.toLocaleString();
+            document.getElementById('d_bni').innerText = d.bni.toLocaleString();
+            document.getElementById('d_bri').innerText = d.bri.toLocaleString();
+            document.getElementById('d_masuk').innerText = d.masukBulanIni.toLocaleString();
+            document.getElementById('d_keluar').innerText = d.keluarBulanIni.toLocaleString();
+            document.getElementById('d_laba').innerText = (d.masukBulanIni - d.keluarBulanIni).toLocaleString();
+            
+            let totalPiutang = d.riwayatNota.reduce((acc, curr) => acc + Number(curr[5]), 0);
+            document.getElementById('d_piutang').innerText = totalPiutang.toLocaleString();
+            
+            dataNotaGlobal = d.riwayatNota;
+            document.querySelector("#tabel_nota tbody").innerHTML = d.riwayatNota.map(r => {
+                let itemsText = ""; try { let parsed = JSON.parse(r[2]); itemsText = parsed.map(it => it.n).join(", "); } catch(e) { itemsText = r[2]; }
+                return `<tr><td><b>${r[1]}</b><br><small>${itemsText}</small></td><td>${Number(r[3]).toLocaleString()}</td><td>${Number(r[5]).toLocaleString()}</td><td>${r[5]>0?`<button onclick="prosesPelunasan('${r[0]}')" style="background:var(--success); padding:3px; font-size:9px;">LUNASKAN</button>`:'LUNAS'}</td></tr>`;
+            }).join("");
+            document.querySelector("#tabel_exp tbody").innerHTML = d.riwayatExp.map(e => {
+                let ket = ""; try { let parsed = JSON.parse(e[1]); ket = Array.isArray(parsed) ? parsed.map(p => p.n).join(", ") : e[1]; } catch(err) { ket = e[1]; }
+                return `<tr><td>${new Date(e[0]).toLocaleDateString('id-ID')}</td><td>${ket}</td><td>${Number(e[2]).toLocaleString()}</td></tr>`;
+            }).join("");
+        } catch(e) { console.error("Gagal load data", e); }
+    }
+    window.onload = loadData;
+    
+    async function simpanExp() {
+        let n = document.getElementById('ex_n').value, h = document.getElementById('ex_h').value;
+        if(!n || !h) return alert("Lengkapi data pengeluaran!");
+        await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ tipe: "Pengeluaran", items: [{n, h}], total: h, metode: document.getElementById('ex_m').value }) });
+        location.reload();
+    }
+    async function prosesAlih() {
+        let j = document.getElementById('tf_j').value; if(!j) return alert("Isi nominal transfer!");
+        await fetch(webAppUrl, { method: 'POST', body: JSON.stringify({ tipe: "Peralihan", dari: document.getElementById('tf_d').value, ke: document.getElementById('tf_k').value, total: j }) });
+        location.reload();
+    }
+
+    function kirimEstimasiWA() {
+        let cs = document.getElementById('cs').value;
+        let t = 0, msg = `*ESTIMASI ASHEEQA PRINTING*\nCS: ${cs}\n\n`;
+        document.querySelectorAll('.item-row').forEach(r => {
+            let n = r.querySelector('.nn').value, q = r.querySelector('.nq').value, h = r.querySelector('.nh').value;
+            if(n) { msg += `- ${n} (${q}x${h}) = ${(q*h).toLocaleString()}\n`; t += (q*h); }
+        });
+        
+        let dp = t * 0.5;
+        let sisa = t - dp;
+
+        msg += `\n*Total: Rp ${t.toLocaleString()}*`;
+        msg += `\n*DP 50%: Rp ${dp.toLocaleString()}*`;
+        msg += `\n*Sisa: Rp ${sisa.toLocaleString()}*`;
+        msg += `\n\n_Harap konfirmasi jika setuju. Terima kasih!_`;
+        
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`);
+    }
+</script>
+</body>
+</html>
